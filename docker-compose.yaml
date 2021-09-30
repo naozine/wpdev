@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+  db:
+    image: mariadb
+    volumes:
+      - ./project/dbdata:/var/lib/mysql
+      - ./project/dblogs:/var/log/mysql
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wp_user
+      MYSQL_PASSWORD: p455w0rd
+      MYSQL_ROOT_PASSWORD: r00+p455w0rd
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_VERBOSE: APP_DB
+      PMA_PORT: 3306
+    depends_on:
+      - db
+
+  test_db:
+    image: mysql:5.7
+    platform: linux/x86_64
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: wordpress_test
+      MYSQL_DATABASE: wordpress_test
+      MYSQL_USER: wordpress_test
+      MYSQL_PASSWORD: wordpress_test
+
+  wp:
+    depends_on:
+      - db
+    image: wordpress:latest
+    build: ./docker/
+    ports:
+      - "8000:80"
+    volumes:
+      - ./wproot:/var/www/html
+      - ./project:/var/www/project
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wp_user
+      WORDPRESS_DB_PASSWORD: p455w0rd
